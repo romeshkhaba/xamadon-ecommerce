@@ -1,10 +1,10 @@
 import Cart from "./cart.model.js";
 import Product from "./product.model.js";
 import CartItem from "./cart-item.model.js";
+import OrderItem from './order-item.model.js';
 import User from "./user.model.js";
 import Address from "./address.model.js";
 import Order from "./order.model.js";
-import OrderItem from "./order-item.model.js";
 import Rating from "./rating.model.js";
 import Wishlist from "./wishlist.model.js";
 

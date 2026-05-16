@@ -67,7 +67,6 @@ export async function signUpService(data) {
     if (error instanceof UniqueConstraintError) {
       throw new AppError('Email already exists', 409);
     }
-
     throw error;
   }
 }

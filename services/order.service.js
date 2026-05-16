@@ -76,8 +76,6 @@ async function getCartWithItems(userId, options = {}) {
 }
 
 async function resolveShippingAddress(userId, data, options = {}) {
-  let shippingAddress;
-
   if (data.addressId) {
     const address = await addressRepository.findAddressById(
       userId,
@@ -89,20 +87,16 @@ async function resolveShippingAddress(userId, data, options = {}) {
       throw new AppError("Address not found", 404);
     }
 
-    shippingAddress = normalizeAddress(address.get({ plain: true }));
-
     return {
       addressId: address.id,
-      shippingAddress,
     };
-  } else {
-    shippingAddress = normalizeAddress(data.shippingAddress);
   }
+
+  const shippingAddress = normalizeAddress(data.shippingAddress);
 
   if (options.createAddress === false) {
     return {
       addressId: null,
-      shippingAddress,
     };
   }
 
@@ -117,7 +111,6 @@ async function resolveShippingAddress(userId, data, options = {}) {
 
   return {
     addressId: orderAddress.id,
-    shippingAddress,
   };
 }
 
@@ -323,7 +316,7 @@ export async function checkout(user, data) {
     const cart = await getCartWithItems(userId, { transaction });
     assertItemsCanCheckout(cart.items);
 
-    const { addressId, shippingAddress } = await resolveShippingAddress(
+    const { addressId } = await resolveShippingAddress(
       userId,
       data,
       { transaction }
@@ -340,7 +333,6 @@ export async function checkout(user, data) {
         paymentMethod: data.paymentMethod,
         paymentProvider: data.paymentMethod,
         currency: data.currency,
-        shippingAddress,
         ...totals,
       },
       { transaction }

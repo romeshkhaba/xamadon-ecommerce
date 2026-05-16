@@ -212,3 +212,8 @@ export async function getProductsByCategory(category){
     productResponse(mergeProductRatingSummary(product, ratingSummaries))
   );
 }
+
+
+export async function getUniqueCategories(){
+  return await productRepository.getUniqueCategories();
+}

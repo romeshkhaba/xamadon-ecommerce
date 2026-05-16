@@ -19,6 +19,10 @@ const Order = sequelize.define("order", {
   addressId: {
     type: DataTypes.UUID,
     allowNull: false,
+    references: {
+      model: "addresses",
+      key: "id",
+    },
   },
   status: {
     type: DataTypes.ENUM("pending", "confirmed", "processing", "shipped", "delivered", "cancelled"),
@@ -77,10 +81,6 @@ const Order = sequelize.define("order", {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
     defaultValue: 0,
-  },
-  shippingAddress: {
-    type: DataTypes.JSON,
-    allowNull: false,
   },
   placedAt: {
     type: DataTypes.DATE,

@@ -29,3 +29,16 @@ export async function getAllUsers(req, res) {
         res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+
+export async function getProfile(req, res){
+  try{
+    const user = await userService.getUserById(req.user.id);
+    const response = userResponse(user);
+    res.success(response, 'Profile retrieved successfully');
+
+  } catch(error){
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}

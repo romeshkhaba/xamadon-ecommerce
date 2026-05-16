@@ -1,3 +1,5 @@
+import { addressResponse } from "./address-response.dto.js";
+
 function asPlainRecord(model) {
   if (model && typeof model.get === "function") {
     return model.get({ plain: true });
@@ -32,6 +34,23 @@ function orderItemResponse(itemModel) {
   };
 }
 
+function orderUserResponse(userModel) {
+  const user = asPlainRecord(userModel);
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    isAdmin: Boolean(user.isAdmin),
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
 export function orderResponse(orderModel) {
   const order = asPlainRecord(orderModel);
 
@@ -43,7 +62,9 @@ export function orderResponse(orderModel) {
     id: order.id,
     orderNumber: order.orderNumber,
     userId: order.userId,
+    user: orderUserResponse(order.user),
     addressId: order.addressId,
+    address: addressResponse(order.address),
     status: order.status,
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,
@@ -56,7 +77,6 @@ export function orderResponse(orderModel) {
     taxAmount: toMoneyNumber(order.taxAmount),
     discountAmount: toMoneyNumber(order.discountAmount),
     totalAmount: toMoneyNumber(order.totalAmount),
-    shippingAddress: order.shippingAddress,
     items: (order.items ?? []).map(orderItemResponse),
     user: order.user ?? {},
     placedAt: order.placedAt,
