@@ -33,19 +33,6 @@ router.get(
   "/checkout-session/:sessionId/payment-status",
   asyncHandler(orderController.checkStripeCheckoutPayment)
 );
-router.get("/admin", authorizeAdmin, asyncHandler(orderController.getAdminOrders));
-router.patch(
-  "/admin/:orderId/status",
-  authorizeAdmin,
-  validate(updateOrderStatusDTO),
-  asyncHandler(orderController.updateOrderStatus)
-);
-router.patch(
-  "/admin/:orderId/payment-status",
-  authorizeAdmin,
-  validate(updatePaymentStatusDTO),
-  asyncHandler(orderController.updatePaymentStatus)
-);
 router.get("/:orderId", asyncHandler(orderController.getOrderById));
 router.post("/:orderId/retry-payment", asyncHandler(orderController.retryPayment));
 router.post("/:orderId/cancel", asyncHandler(orderController.cancelOrder));

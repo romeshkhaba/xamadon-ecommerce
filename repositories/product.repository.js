@@ -20,6 +20,20 @@ export async function updateProduct(id, data) {
   return existingProduct;
 }
 
+export async function deleteProduct(id) {
+  const existingProduct = await Product.findOne({
+    where: { id },
+  });
+
+  if (!existingProduct) {
+    return null;
+  }
+
+  await existingProduct.update({ isActive: false });
+
+  return existingProduct;
+}
+
 export async function getProductById(id) {
   const product = await Product.findOne({
     where: { id },

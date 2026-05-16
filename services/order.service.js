@@ -476,6 +476,29 @@ export async function getAdminOrders(query = {}) {
   return orders.map(orderResponse);
 }
 
+export async function getAdminOrderById(orderId) {
+  const order = await getOrderOrFail(orderId);
+
+  return orderResponse(order);
+}
+
+export async function updateAdminOrder(orderId, data) {
+  const order = await sequelize.transaction(async (transaction) => {
+    const existingOrder = await getOrderOrFail(orderId, { transaction });
+
+    return orderRepository.updateOrder(
+      existingOrder,
+      {
+        ...(data.status && { status: data.status }),
+        ...(data.paymentStatus && { paymentStatus: data.paymentStatus }),
+      },
+      { transaction }
+    );
+  });
+
+  return orderResponse(order);
+}
+
 export async function updateOrderStatus(orderId, status) {
   const order = await sequelize.transaction(async (transaction) => {
     const existingOrder = await getOrderOrFail(orderId, { transaction });

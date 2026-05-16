@@ -92,7 +92,7 @@ export async function createEmbeddedCheckoutSession({ order, user }) {
 
   return stripe.checkout.sessions.create({
     mode: 'payment',
-    ui_mode: 'embedded',
+    ui_mode: 'embedded_page',
     line_items: buildLineItems(order.items ?? [], currency),
     client_reference_id: order.id,
     customer_email: user.email,

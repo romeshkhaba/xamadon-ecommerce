@@ -43,6 +43,19 @@ export const updatePaymentStatusDTO = z.object({
   paymentStatus: z.enum(["pending", "paid", "failed", "refunded", "cancelled"]),
 });
 
+export const adminUpdateOrderDTO = z
+  .object({
+    status: z
+      .enum(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"])
+      .optional(),
+    paymentStatus: z
+      .enum(["pending", "paid", "failed", "refunded", "cancelled"])
+      .optional(),
+  })
+  .refine((value) => value.status || value.paymentStatus, {
+    message: "Order status or payment status is required",
+  });
+
 export const stripeCheckoutPaymentStatusDTO = z
   .object({
     sessionId: z.string().trim().min(1, "Checkout session id is required").optional(),

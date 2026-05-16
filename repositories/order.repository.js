@@ -1,9 +1,14 @@
-import { Order, OrderItem } from "../models/associations.js";
+import { Order, OrderItem, User } from "../models/associations.js";
 
 const orderInclude = [
   {
     model: OrderItem,
     as: "items",
+  },
+  {
+    model: User,
+    attributes:['id', 'email','name','createdAt','updatedAt'],
+    as: "user",
   },
 ];
 

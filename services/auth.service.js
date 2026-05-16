@@ -76,6 +76,7 @@ export async function signUpService(data) {
 export async function login(data) {
   const email = data.email.trim().toLowerCase();
   const existingUser = await getUserByEmail(email);
+  console.log('\n\n\n\n',existingUser)
 
   if (!existingUser) {
     throw new AppError('User does not exists', 404);

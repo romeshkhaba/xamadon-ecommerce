@@ -65,6 +65,21 @@ export async function getAdminOrders(req, res) {
   res.success(orders, "Admin orders retrieved successfully");
 }
 
+export async function getAdminOrderById(req, res) {
+  const order = await orderService.getAdminOrderById(req.params.orderId);
+
+  res.success(order, "Admin order retrieved successfully");
+}
+
+export async function updateAdminOrder(req, res) {
+  const order = await orderService.updateAdminOrder(
+    req.params.orderId,
+    req.validatedData
+  );
+
+  res.success(order, "Admin order updated successfully");
+}
+
 export async function updateOrderStatus(req, res) {
   const order = await orderService.updateOrderStatus(
     req.params.orderId,

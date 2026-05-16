@@ -8,6 +8,7 @@ import orderRoute from './routes/order.route.js';
 import ratingRoute from './routes/rating.route.js';
 import stripeWebhookRoute from './routes/stripe-webhook.route.js';
 import wishlistRoute from './routes/wishlist.route.js';
+import adminRoute from './routes/admin.route.js';
 import successResponse from './middleware/success-response.js';
 import errorResponse from './middleware/error-response.js';
 import sequelize from './config/database.js';
@@ -39,6 +40,7 @@ app.use('/addresses', addressRoute);
 app.use('/orders', orderRoute);
 app.use('/ratings', ratingRoute);
 app.use('/wishlist', wishlistRoute);
+app.use('/admin', adminRoute);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');

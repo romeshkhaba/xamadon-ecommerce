@@ -58,6 +58,7 @@ export function orderResponse(orderModel) {
     totalAmount: toMoneyNumber(order.totalAmount),
     shippingAddress: order.shippingAddress,
     items: (order.items ?? []).map(orderItemResponse),
+    user: order.user ?? {},
     placedAt: order.placedAt,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
