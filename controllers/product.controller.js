@@ -1,4 +1,5 @@
 import * as productService from '../services/product.service.js';
+import { AppError } from '../middleware/error-response.js';
 
 export async function getProducts(req, res) {
   const products = await productService.getProducts(req.query);
@@ -31,6 +32,16 @@ export async function deleteProduct(req, res) {
   const product = await productService.deleteProduct(req.params.id);
 
   res.success(product, 'Product deleted successfully');
+}
+
+export async function uploadProductImage(req, res) {
+  if (!req.file) {
+    throw new AppError('Image file is required', 400);
+  }
+
+  const image = `/uploads/${encodeURIComponent(req.file.filename)}`;
+
+  res.success({ image }, 'Product image uploaded successfully', 201);
 }
 
 export async function getProductById(req, res) {

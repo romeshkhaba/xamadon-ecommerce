@@ -10,6 +10,7 @@ import * as productController from '../controllers/product.controller.js';
 import authenticate from '../middleware/authenticate.js';
 import authorizeAdmin from '../middleware/authorize-admin.js';
 import asyncHandler from '../middleware/async-handler.js';
+import uploadProductImage from '../middleware/upload-product-image.js';
 import validate from '../middleware/validate.js';
 
 const router = express.Router();
@@ -47,6 +48,11 @@ router.post(
   '/products',
   validate(createProductDTO),
   asyncHandler(productController.createProduct)
+);
+router.post(
+  '/products/upload-image',
+  uploadProductImage,
+  asyncHandler(productController.uploadProductImage)
 );
 router.get(
   '/products/:id',
