@@ -44,7 +44,7 @@ async function ensureDatabaseReady(req, res, next) {
 }
 
 app.use(cors({
-  origin: ["http://localhost:5174", "http://localhost:5173", "https://xamadon-ecommerce.vercel.app"],
+  origin: ["http://localhost:5174", "http://localhost:5173", "https://xamadon-keithel.vercel.app"],
   credentials: true,
 }));
 
