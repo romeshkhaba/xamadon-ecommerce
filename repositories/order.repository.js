@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Order, OrderItem, User } from "../models/associations.js";
-=======
-import { Address, Order, OrderItem, User } from "../models/associations.js";
->>>>>>> 4bff5db10027d6bec5e5ac7c9786734257904308
 
 const orderInclude = [
   {
@@ -11,17 +7,8 @@ const orderInclude = [
   },
   {
     model: User,
-<<<<<<< HEAD
     attributes:['id', 'email','name','createdAt','updatedAt'],
     as: "user",
-=======
-    as: "user",
-    attributes: ["id", "name", "email", "isAdmin", "createdAt", "updatedAt"],
-  },
-  {
-    model: Address,
-    as: "address",
->>>>>>> 4bff5db10027d6bec5e5ac7c9786734257904308
   },
 ];
 
