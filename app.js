@@ -21,12 +21,34 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
+let databaseReady;
+
+async function initializeDatabase() {
+  if (!databaseReady) {
+    databaseReady = (async () => {
+      await sequelize.authenticate();
+      await syncDatabase();
+    })();
+  }
+
+  return databaseReady;
+}
+
+async function ensureDatabaseReady(req, res, next) {
+  try {
+    await initializeDatabase();
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
 
 app.use(cors({
   origin: ["http://localhost:5174", "http://localhost:5173"],
   credentials: true,
 }));
 
+app.use(ensureDatabaseReady);
 app.use(stripeWebhookRoute);
 app.use(express.json());
 app.use(successResponse);
@@ -50,9 +72,7 @@ app.use(errorResponse);
 
 async function startServer() {
   try {
-    await sequelize.authenticate();
-
-    await syncDatabase();
+    await initializeDatabase();
 
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
@@ -63,4 +83,8 @@ async function startServer() {
   }
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
