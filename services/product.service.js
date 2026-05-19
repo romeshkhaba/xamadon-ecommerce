@@ -77,6 +77,9 @@ export async function getProducts(query = {}) {
   const search = typeof query.search === 'string' ? query.search.trim() : undefined;
   const category =
     typeof query.category === 'string' ? query.category.trim() : undefined;
+  const isHero = query.isHero === undefined
+    ? undefined
+    : parseBoolean(query.isHero, undefined);
 
   const { rows, count } = await productRepository.getProducts({
     page,
@@ -84,6 +87,7 @@ export async function getProducts(query = {}) {
     search: search || undefined,
     category: category || undefined,
     isActive: parseBoolean(query.isActive, true),
+    isHero,
   });
 
   const ratingSummaries = await getRatingSummariesByProductIds(
@@ -116,6 +120,9 @@ export async function getAdminProducts(query = {}) {
   const isActive = query.isActive === undefined
     ? undefined
     : parseBoolean(query.isActive, undefined);
+  const isHero = query.isHero === undefined
+    ? undefined
+    : parseBoolean(query.isHero, undefined);
 
   const { rows, count } = await productRepository.getProducts({
     page,
@@ -123,6 +130,7 @@ export async function getAdminProducts(query = {}) {
     search: search || undefined,
     category: category || undefined,
     isActive,
+    isHero,
   });
 
   const ratingSummaries = await getRatingSummariesByProductIds(

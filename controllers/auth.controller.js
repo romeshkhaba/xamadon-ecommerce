@@ -30,6 +30,12 @@ export const verifyAdminLoginOtp = async (req, res) => {
   res.success(response, 'Admin login verified successfully', 200, { accessToken });
 };
 
+export const resendAdminLoginOtp = async (req, res) => {
+  const response = await authService.resendAdminLoginOtp(req.validatedData);
+
+  res.success(response, 'Admin OTP resent to email');
+};
+
 export const changePassword = async (req, res) => {
   const response = await authService.changePassword(req.user, req.validatedData);
 

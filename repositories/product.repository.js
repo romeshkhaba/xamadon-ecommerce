@@ -56,6 +56,7 @@ export async function getProducts({
   page = 1,
   limit = 12,
   isActive = true,
+  isHero,
 } = {}) {
   const where = {};
 
@@ -65,6 +66,10 @@ export async function getProducts({
 
   if (typeof isActive === 'boolean') {
     where.isActive = isActive;
+  }
+
+  if (typeof isHero === 'boolean') {
+    where.isHero = isHero;
   }
 
   if (search) {

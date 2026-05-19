@@ -31,6 +31,7 @@ export function productResponse(productModel) {
     averageRating: Number(Number(product.averageRating ?? 0).toFixed(1)),
     ratingCount: Number(product.ratingCount ?? 0),
     isActive: product.isActive !== false,
+    isHero: product.isHero === true,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   };

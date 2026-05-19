@@ -42,6 +42,11 @@ const Product = sequelize.define("product", {
     allowNull: false,
     defaultValue: true,
   },
+  isHero: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
   category: {
     type: DataTypes.ENUM(
       "electronics",

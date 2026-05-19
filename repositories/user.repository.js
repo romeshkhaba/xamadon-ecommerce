@@ -43,3 +43,17 @@ export async function updateUser(user, data) {
 
   return user;
 }
+
+export async function updateUserById(id, data) {
+  const user = await User.findOne({
+    where: { id },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  await user.update(data);
+
+  return user;
+}

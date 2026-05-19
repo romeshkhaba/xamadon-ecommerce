@@ -1,7 +1,7 @@
 import express from 'express';
 import validate from '../middleware/validate.js';
 import { signUpDTO } from '../dto/signup.dto.js';
-import { loginDTO, verifyAdminOtpDTO } from '../dto/login.dto.js';
+import { loginDTO, resendAdminOtpDTO, verifyAdminOtpDTO } from '../dto/login.dto.js';
 import { changePasswordDTO, forgotPasswordDTO, resetPasswordDTO } from '../dto/password.dto.js';
 import asyncHandler from '../middleware/async-handler.js';
 import authenticate from '../middleware/authenticate.js';
@@ -12,6 +12,7 @@ const router = express.Router();
 router.post('/sign-up', validate(signUpDTO), asyncHandler(authController.signupController));
 router.post('/login', validate(loginDTO), asyncHandler(authController.login));
 router.post('/verify-admin-otp', validate(verifyAdminOtpDTO), asyncHandler(authController.verifyAdminLoginOtp));
+router.post('/resend-admin-otp', validate(resendAdminOtpDTO), asyncHandler(authController.resendAdminLoginOtp));
 router.post(
   '/change-password',
   authenticate,

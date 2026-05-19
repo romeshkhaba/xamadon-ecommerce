@@ -9,3 +9,7 @@ export const verifyAdminOtpDTO = z.object({
     email: z.string().email("Invalid email address"),
     otp: z.string().trim().regex(/^\d{6}$/, "OTP must be a 6 digit code")
 });
+
+export const resendAdminOtpDTO = z.object({
+    email: z.string().email("Invalid email address")
+});

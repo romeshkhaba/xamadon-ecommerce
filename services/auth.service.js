@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 import { UniqueConstraintError } from 'sequelize';
 import { AppError } from '../middleware/error-response.js';
-import { createUser, getUserByEmail, updateUser } from '../repositories/user.repository.js';
+import { createUser, getUserByEmail, updateUser, updateUserById } from '../repositories/user.repository.js';
 import jwt from 'jsonwebtoken'
 import { isAdminUser } from '../utils/admin.js';
 import { sendAdminLoginOtpEmail, sendPasswordResetEmail, sendWelcomeEmail } from './email.service.js';
@@ -87,26 +87,7 @@ export async function login(data) {
   }
 
   if (isAdminUser(existingUser)) {
-    const otp = createOtp();
-    const twoFactorOtpExpiresAt = new Date(
-      Date.now() + ADMIN_LOGIN_OTP_MINUTES * 60 * 1000
-    );
-
-    await updateUser(existingUser, {
-      twoFactorOtpToken: hashToken(otp),
-      twoFactorOtpExpiresAt,
-    });
-
-    try {
-      await sendAdminLoginOtpEmail(existingUser, otp, ADMIN_LOGIN_OTP_MINUTES);
-    } catch (error) {
-      await updateUser(existingUser, {
-        twoFactorOtpToken: null,
-        twoFactorOtpExpiresAt: null,
-      });
-
-      throw new AppError(`Unable to send admin login OTP: ${error.message}`, 500);
-    }
+    await sendAdminLoginOtp(existingUser);
 
     return {
       twoFactorRequired: true,
@@ -119,6 +100,42 @@ export async function login(data) {
   return {existingUser, accessToken};
 }
 
+async function sendAdminLoginOtp(user) {
+  const otp = createOtp();
+  const twoFactorOtpExpiresAt = new Date(
+    Date.now() + ADMIN_LOGIN_OTP_MINUTES * 60 * 1000
+  );
+
+  const updatedUser = await updateUserById(user.id, {
+    twoFactorOtpToken: otp,
+    twoFactorOtpExpiresAt,
+  });
+
+  if (!updatedUser) {
+    throw new AppError('Unable to update OTP', 500);
+  }
+
+  sendAdminLoginOtpEmail(updatedUser, otp, ADMIN_LOGIN_OTP_MINUTES).catch((error) => {
+    console.error('Failed to send admin login OTP email:', error.message);
+  });
+}
+
+export async function resendAdminLoginOtp(data) {
+  const email = data.email.trim().toLowerCase();
+  const existingUser = await getUserByEmail(email);
+
+  if (!existingUser || !isAdminUser(existingUser)) {
+    throw new AppError('Unable to resend OTP', 400);
+  }
+
+  await sendAdminLoginOtp(existingUser);
+
+  return {
+    email: existingUser.email,
+    twoFactorRequired: true,
+  };
+}
+
 export async function verifyAdminLoginOtp(data) {
   const email = data.email.trim().toLowerCase();
   const existingUser = await getUserByEmail(email);
@@ -127,7 +144,7 @@ export async function verifyAdminLoginOtp(data) {
     throw new AppError('Invalid or expired OTP', 400);
   }
 
-  const tokenMatches = existingUser.twoFactorOtpToken === hashToken(data.otp);
+  const tokenMatches = existingUser.twoFactorOtpToken === data.otp;
   const tokenIsValid =
     existingUser.twoFactorOtpExpiresAt &&
     new Date(existingUser.twoFactorOtpExpiresAt).getTime() > Date.now();

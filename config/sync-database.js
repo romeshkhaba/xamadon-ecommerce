@@ -380,6 +380,14 @@ async function syncOrdersTable(queryInterface) {
   );
 }
 
+async function syncProductsTable(queryInterface) {
+  await addColumnIfMissing(queryInterface, 'products', 'isHero', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  });
+}
+
 export default async function syncDatabase() {
   await sequelize.sync();
 
@@ -406,6 +414,7 @@ export default async function syncDatabase() {
     type: DataTypes.DATE,
     allowNull: true,
   });
+  await syncProductsTable(queryInterface);
   await syncAddressesTable(queryInterface);
   await syncOrdersTable(queryInterface);
 }

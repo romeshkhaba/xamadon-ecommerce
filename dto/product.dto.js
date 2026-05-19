@@ -29,6 +29,7 @@ const productFields = {
   price: z.coerce.number().min(0, "Price cannot be negative"),
   stock: z.coerce.number().int("Stock must be a whole number").min(0, "Stock cannot be negative"),
   isActive: z.boolean().optional().default(true),
+  isHero: z.boolean().optional().default(false),
 };
 
 export const createProductDTO = z.object(productFields);
