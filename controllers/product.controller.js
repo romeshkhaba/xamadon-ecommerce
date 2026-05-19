@@ -1,5 +1,20 @@
+import path from 'path';
+import { put } from '@vercel/blob';
 import * as productService from '../services/product.service.js';
 import { AppError } from '../middleware/error-response.js';
+
+function createBlobPath(originalName) {
+  const extension = path.extname(originalName).toLowerCase();
+  const basename = path
+    .basename(originalName, extension)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 50);
+  const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+
+  return `products/${basename || 'product'}-${uniqueSuffix}${extension}`;
+}
 
 export async function getProducts(req, res) {
   const products = await productService.getProducts(req.query);
@@ -39,9 +54,12 @@ export async function uploadProductImage(req, res) {
     throw new AppError('Image file is required', 400);
   }
 
-  const image = `/uploads/${encodeURIComponent(req.file.filename)}`;
+  const blob = await put(createBlobPath(req.file.originalname), req.file.buffer, {
+    access: 'public',
+    contentType: req.file.mimetype,
+  });
 
-  res.success({ image }, 'Product image uploaded successfully', 201);
+  res.success({ image: blob.url }, 'Product image uploaded successfully', 201);
 }
 
 export async function getProductById(req, res) {
