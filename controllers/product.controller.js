@@ -54,9 +54,16 @@ export async function uploadProductImage(req, res) {
     throw new AppError('Image file is required', 400);
   }
 
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (!blobToken) {
+    throw new AppError('Blob storage token is not configured', 500);
+  }
+
   const blob = await put(createBlobPath(req.file.originalname), req.file.buffer, {
     access: 'public',
     contentType: req.file.mimetype,
+    token: blobToken,
   });
 
   res.success({ image: blob.url }, 'Product image uploaded successfully', 201);
