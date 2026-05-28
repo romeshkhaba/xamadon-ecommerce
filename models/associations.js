@@ -5,8 +5,42 @@ import OrderItem from './order-item.model.js';
 import User from "./user.model.js";
 import Address from "./address.model.js";
 import Order from "./order.model.js";
+import Permission from "./permission.model.js";
 import Rating from "./rating.model.js";
+import RoleModule from "./role-module.model.js";
+import Role from "./role.model.js";
 import Wishlist from "./wishlist.model.js";
+
+Role.hasMany(User, {
+  foreignKey: "roleId",
+  as: "users",
+});
+
+User.belongsTo(Role, {
+  foreignKey: "roleId",
+  as: "role",
+});
+
+Role.hasMany(RoleModule, {
+  foreignKey: "roleId",
+  as: "roleModules",
+  onDelete: "CASCADE",
+});
+
+RoleModule.belongsTo(Role, {
+  foreignKey: "roleId",
+  as: "role",
+});
+
+Permission.hasMany(RoleModule, {
+  foreignKey: "permissionId",
+  as: "roleModules",
+});
+
+RoleModule.belongsTo(Permission, {
+  foreignKey: "permissionId",
+  as: "permission",
+});
 
 User.hasOne(Cart, {
   foreignKey: "userId",
@@ -155,8 +189,11 @@ export {
   CartItem,
   Order,
   OrderItem,
+  Permission,
   Product,
   Rating,
+  Role,
+  RoleModule,
   User,
   Wishlist,
 };

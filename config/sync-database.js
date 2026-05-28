@@ -1,5 +1,8 @@
 import { DataTypes } from 'sequelize';
 import sequelize from './database.js';
+import Permission, { DEFAULT_PERMISSIONS } from '../models/permission.model.js';
+import Role from '../models/role.model.js';
+import RoleModule from '../models/role-module.model.js';
 
 async function addColumnIfMissing(queryInterface, tableName, columnName, definition) {
   const table = await queryInterface.describeTable(tableName);
@@ -50,6 +53,21 @@ async function addIndexIfMissing(queryInterface, tableName, indexName, fields, o
     ...options,
     name: indexName,
   });
+}
+
+async function addIndexIfPossible(queryInterface, tableName, indexName, fields, options = {}) {
+  try {
+    await addIndexIfMissing(queryInterface, tableName, indexName, fields, options);
+  } catch (error) {
+    if (error?.original?.code === 'ER_TOO_MANY_KEYS') {
+      console.warn(
+        `Skipped index ${indexName} on ${tableName}: MySQL key limit reached`
+      );
+      return;
+    }
+
+    throw error;
+  }
 }
 
 async function removeMatchingIndexes(queryInterface, tableName, fields, options = {}) {
@@ -388,6 +406,181 @@ async function syncProductsTable(queryInterface) {
   });
 }
 
+async function syncRolesTable(queryInterface) {
+  await removeColumnIfExists(queryInterface, 'roles', 'description');
+  await removeColumnIfExists(queryInterface, 'roles', 'permissions');
+}
+
+async function syncRoleModulesTable(queryInterface) {
+  await addColumnIfMissing(queryInterface, 'role_modules', 'role_id', {
+    type: DataTypes.UUID,
+    allowNull: true,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'permission_id', {
+    type: DataTypes.UUID,
+    allowNull: true,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'name', {
+    type: DataTypes.STRING,
+    allowNull: true,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'read', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'write', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'delete', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  });
+  await addColumnIfMissing(queryInterface, 'role_modules', 'is_active', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  });
+
+  await removeColumnIfExists(queryInterface, 'role_modules', 'key');
+  await removeColumnIfExists(queryInterface, 'role_modules', 'description');
+
+  await changeColumnIfExists(queryInterface, 'role_modules', 'name', {
+    type: DataTypes.STRING,
+    allowNull: false,
+  });
+  await removeMatchingIndexes(queryInterface, 'role_modules', ['name'], {
+    uniqueOnly: true,
+  });
+  await addIndexIfPossible(
+    queryInterface,
+    'role_modules',
+    'role_modules_role_id_name_unique',
+    ['role_id', 'name'],
+    { unique: true }
+  );
+  await addIndexIfPossible(
+    queryInterface,
+    'role_modules',
+    'role_modules_role_id_permission_id_unique',
+    ['role_id', 'permission_id'],
+    { unique: true }
+  );
+}
+
+async function syncPermissionsTable(queryInterface) {
+  await addColumnIfMissing(queryInterface, 'permissions', 'name', {
+    type: DataTypes.STRING,
+    allowNull: true,
+  });
+  await addColumnIfMissing(queryInterface, 'permissions', 'read', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  });
+  await addColumnIfMissing(queryInterface, 'permissions', 'write', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  });
+  await addColumnIfMissing(queryInterface, 'permissions', 'delete', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  });
+  await addColumnIfMissing(queryInterface, 'permissions', 'is_active', {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  });
+
+  await changeColumnIfExists(queryInterface, 'permissions', 'name', {
+    type: DataTypes.STRING,
+    allowNull: false,
+  });
+  await addIndexIfPossible(
+    queryInterface,
+    'permissions',
+    'permissions_name_unique',
+    ['name'],
+    { unique: true }
+  );
+}
+
+async function seedDefaultPermissions() {
+  for (const permissionData of DEFAULT_PERMISSIONS) {
+    const [permission, created] = await Permission.findOrCreate({
+      where: {
+        name: permissionData.name,
+      },
+      defaults: {
+        ...permissionData,
+        isActive: true,
+      },
+    });
+
+    if (!created && permission.isActive === false) {
+      await permission.update({ isActive: true });
+    }
+  }
+}
+
+async function backfillRoleModulesFromPermissions() {
+  const roles = await Role.findAll({
+    where: {
+      isActive: true,
+    },
+  });
+  const permissions = await Permission.findAll({
+    where: {
+      isActive: true,
+    },
+  });
+
+  for (const role of roles) {
+    for (const permission of permissions) {
+      const existingRoleModule = await RoleModule.findOne({
+        where: {
+          roleId: role.id,
+          permissionId: permission.id,
+        },
+      });
+
+      if (existingRoleModule) {
+        continue;
+      }
+
+      const existingRoleModuleByName = await RoleModule.findOne({
+        where: {
+          roleId: role.id,
+          name: permission.name,
+        },
+      });
+
+      if (existingRoleModuleByName) {
+        if (!existingRoleModuleByName.permissionId) {
+          await existingRoleModuleByName.update({ permissionId: permission.id });
+        }
+
+        continue;
+      }
+
+      await RoleModule.create({
+        roleId: role.id,
+        permissionId: permission.id,
+        name: permission.name,
+        read: permission.read,
+        write: permission.write,
+        delete: permission.delete,
+        isActive: permission.isActive,
+      });
+    }
+  }
+}
+
 export default async function syncDatabase() {
   await sequelize.sync();
 
@@ -397,6 +590,10 @@ export default async function syncDatabase() {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false,
+  });
+  await addColumnIfMissing(queryInterface, 'users', 'role_id', {
+    type: DataTypes.UUID,
+    allowNull: true,
   });
   await addColumnIfMissing(queryInterface, 'users', 'reset_password_token', {
     type: DataTypes.STRING,
@@ -414,6 +611,11 @@ export default async function syncDatabase() {
     type: DataTypes.DATE,
     allowNull: true,
   });
+  await syncRolesTable(queryInterface);
+  await syncPermissionsTable(queryInterface);
+  await syncRoleModulesTable(queryInterface);
+  await seedDefaultPermissions();
+  await backfillRoleModulesFromPermissions();
   await syncProductsTable(queryInterface);
   await syncAddressesTable(queryInterface);
   await syncOrdersTable(queryInterface);

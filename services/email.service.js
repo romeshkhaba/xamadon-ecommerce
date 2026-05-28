@@ -60,6 +60,24 @@ export async function sendWelcomeEmail(user) {
   });
 }
 
+export async function sendAdminCreatedUserEmail(user, password, loginUrl) {
+  return sendMail({
+    to: user.email,
+    subject: "Your Exclusive account details",
+    text: `Hi ${user.name}, your Exclusive account has been created. Login URL: ${loginUrl}. Email: ${user.email}. Password: ${password}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Your Exclusive account is ready</h2>
+        <p>Hi ${user.name}, an account has been created for you.</p>
+        <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Password:</strong> ${password}</p>
+        <p>Please sign in and change your password after your first login.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(user, resetUrl) {
   return sendMail({
     to: user.email,

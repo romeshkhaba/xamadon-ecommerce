@@ -30,6 +30,13 @@ export async function getAllUsers(req, res) {
     }
 }
 
+export async function createUserByAdmin(req, res) {
+  const user = await userService.createUserByAdmin(req.validatedData);
+  const response = userResponse(user);
+
+  res.success(response, 'User created successfully', 201);
+}
+
 
 export async function getProfile(req, res){
   try{
@@ -41,4 +48,27 @@ export async function getProfile(req, res){
     console.error("Error fetching profile:", error);
     res.status(500).json({ message: 'Internal server error' });
   }
+}
+
+export async function updateAdminUser(req, res) {
+  const user = await userService.updateAdminUser(req.params.id, req.validatedData);
+  const response = userResponse(user);
+
+  res.success(response, 'User updated successfully');
+}
+
+export async function deleteAdminUser(req, res) {
+  await userService.deleteAdminUser(req.params.id);
+
+  res.success(null, 'User deleted successfully');
+}
+
+export async function assignUserRole(req, res) {
+  const user = await userService.assignUserRole(
+    req.params.id,
+    req.validatedData.roleId
+  );
+  const response = userResponse(user);
+
+  res.success(response, 'User role updated successfully');
 }

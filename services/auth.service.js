@@ -4,7 +4,7 @@ import { UniqueConstraintError } from 'sequelize';
 import { AppError } from '../middleware/error-response.js';
 import { createUser, getUserByEmail, updateUser, updateUserById } from '../repositories/user.repository.js';
 import jwt from 'jsonwebtoken'
-import { isAdminUser } from '../utils/admin.js';
+import { getUserRole, getUserRoleModules, hasAdminAccess, isAdminUser } from '../utils/admin.js';
 import { sendAdminLoginOtpEmail, sendPasswordResetEmail, sendWelcomeEmail } from './email.service.js';
 
 const SALT_ROUNDS = 10;
@@ -36,6 +36,14 @@ function createAccessToken(user) {
       name: user.name,
       email: user.email,
       isAdmin: isAdminUser(user),
+      hasAdminAccess: hasAdminAccess(user),
+      role: getUserRole(user)
+        ? {
+            id: getUserRole(user).id,
+            name: getUserRole(user).name,
+          }
+        : null,
+      roleModules: getUserRoleModules(user),
     },
     jwtSecret,
     { expiresIn: '7d' }

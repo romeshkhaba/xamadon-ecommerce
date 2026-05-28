@@ -33,6 +33,10 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: false
     },
+    roleId: {
+      type: DataTypes.UUID,
+      allowNull: true
+    },
     resetPasswordToken: {
       type: DataTypes.STRING,
       allowNull: true
