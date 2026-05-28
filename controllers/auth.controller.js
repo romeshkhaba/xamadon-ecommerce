@@ -8,6 +8,13 @@ export const signupController = async (req, res) => {
   res.success(response, 'User created successfully', 201);
 };
 
+export const adminSignupController = async (req, res) => {
+  const user = await authService.adminSignUpService(req.validatedData);
+  const response = userResponse(user);
+
+  res.success(response, 'Admin account created successfully', 201);
+};
+
 export const login = async (req, res) => {
   const {existingUser, accessToken, twoFactorRequired, email} = await authService.login(req.validatedData);
 

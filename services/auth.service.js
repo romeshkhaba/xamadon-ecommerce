@@ -79,6 +79,32 @@ export async function signUpService(data) {
   }
 }
 
+export async function adminSignUpService(data) {
+  const name = data.name.trim();
+  const email = data.email.trim().toLowerCase();
+  const existingUser = await getUserByEmail(email);
+
+  if (existingUser) {
+    throw new AppError('Email already exists', 409);
+  }
+
+  try {
+    const user = await createUser({
+      name,
+      email,
+      password: await hashPassword(data.password),
+      isAdmin: true,
+    });
+
+    return user;
+  } catch (error) {
+    if (error instanceof UniqueConstraintError) {
+      throw new AppError('Email already exists', 409);
+    }
+    throw error;
+  }
+}
+
 
 export async function login(data) {
   const email = data.email.trim().toLowerCase();
