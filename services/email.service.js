@@ -3,47 +3,37 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-function getMailConfig() {
-  return {
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: String(process.env.SMTP_SECURE ?? "true") === "true",
-    pass: process.env.SMTP_PASS,
-    from: process.env.SMTP_FROM,
-  };
-}
+// Singleton transporter with connection pooling — avoids reconnecting on every email
+let _transporter = null;
 
-function createTransporter() {
-  const config = getMailConfig();
+function getTransporter() {
+  if (_transporter) return _transporter;
 
-  if (!config.pass || !config.from) {
-    throw new Error(
-      "SMTP is not configured. Set SMTP_USER and SMTP_PASS, or GMAIL_USER and GMAIL_APP_PASSWORD."
-    );
+  const user = process.env.SMTP_FROM;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    throw new Error("SMTP_FROM and SMTP_PASS must be set in environment variables.");
   }
 
-  return nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: config.from,
-    pass: config.pass
-  }
+  _transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,        // STARTTLS — faster handshake than SSL/465
+    requireTLS: true,
+    pool: true,           // reuse connections instead of reconnecting every time
+    maxConnections: 3,
+    auth: { user, pass },
   });
+
+  return _transporter;
 }
 
 export async function sendMail({ to, subject, text, html }) {
-  const transporter = createTransporter();
-  const config = getMailConfig();
+  const transporter = getTransporter();
+  const from = process.env.SMTP_FROM;
 
-  return transporter.sendMail({
-    from: config.from,
-    to,
-    subject,
-    text,
-    html,
-  });
+  return transporter.sendMail({ from, to, subject, text, html });
 }
 
 export async function sendWelcomeEmail(user) {
