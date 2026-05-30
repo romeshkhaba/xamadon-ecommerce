@@ -1,5 +1,6 @@
 import { ratingResponse, ratingSummaryResponse } from "../dto/rating-response.dto.js";
 import { AppError } from "../middleware/error-response.js";
+import { hasDeliveredOrderWithProduct } from "../repositories/order.repository.js";
 import { getProductById } from "../repositories/product.repository.js";
 import * as ratingRepository from "../repositories/rating.repository.js";
 
@@ -45,6 +46,12 @@ export async function getMyRatings(userId) {
 
 export async function createRating(userId, data) {
   await getProductById(data.productId);
+
+  const purchased = await hasDeliveredOrderWithProduct(userId, data.productId);
+
+  if (!purchased) {
+    throw new AppError("You can only rate products from delivered orders", 403);
+  }
 
   const existingRating = await ratingRepository.findRatingByUserAndProduct(
     userId,

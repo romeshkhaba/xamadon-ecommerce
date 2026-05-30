@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { Address, Order, OrderItem, User } from "../models/associations.js";
 
 const orderInclude = [
@@ -81,6 +82,24 @@ export async function createOrder(data, options = {}) {
   return Order.create(data, {
     transaction: options.transaction,
   });
+}
+
+export async function hasDeliveredOrderWithProduct(userId, productId) {
+  const order = await Order.findOne({
+    where: { userId, status: 'delivered' },
+    include: [
+      {
+        model: OrderItem,
+        as: 'items',
+        where: { productId },
+        required: true,
+        attributes: [],
+      },
+    ],
+    attributes: ['id'],
+  });
+
+  return Boolean(order);
 }
 
 export async function createOrderItems(items, options = {}) {
