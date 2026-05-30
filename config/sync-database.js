@@ -1,8 +1,43 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, QueryTypes } from 'sequelize';
 import sequelize from './database.js';
 import Permission, { DEFAULT_PERMISSIONS } from '../models/permission.model.js';
 import Role from '../models/role.model.js';
 import RoleModule from '../models/role-module.model.js';
+
+// ---------------------------------------------------------------------------
+// Migration tracker — each named migration runs exactly once, ever.
+// ---------------------------------------------------------------------------
+
+async function ensureMigrationsTable(queryInterface) {
+  const table = await queryInterface.describeTable('_schema_migrations').catch(() => null);
+
+  if (table) return;
+
+  await queryInterface.createTable('_schema_migrations', {
+    name: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    ran_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+  });
+}
+
+async function hasMigrationRun(migrationName) {
+  const rows = await sequelize.query(
+    'SELECT 1 FROM _schema_migrations WHERE name = :name LIMIT 1',
+    { replacements: { name: migrationName }, type: QueryTypes.SELECT }
+  );
+  return rows.length > 0;
+}
+
+async function recordMigration(queryInterface, migrationName) {
+  await queryInterface.bulkInsert('_schema_migrations', [
+    { name: migrationName, ran_at: new Date() },
+  ]);
+}
+
+async function runOnce(queryInterface, migrationName, fn) {
+  if (await hasMigrationRun(migrationName)) return;
+  await fn();
+  await recordMigration(queryInterface, migrationName);
+}
 
 async function addColumnIfMissing(queryInterface, tableName, columnName, definition) {
   const table = await queryInterface.describeTable(tableName);
@@ -586,37 +621,48 @@ export default async function syncDatabase() {
 
   const queryInterface = sequelize.getQueryInterface();
 
-  await addColumnIfMissing(queryInterface, 'users', 'is_admin', {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
+  await ensureMigrationsTable(queryInterface);
+
+  await runOnce(queryInterface, '001_users_add_admin_role_columns', async () => {
+    await addColumnIfMissing(queryInterface, 'users', 'is_admin', {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    });
+    await addColumnIfMissing(queryInterface, 'users', 'role_id', {
+      type: DataTypes.UUID,
+      allowNull: true,
+    });
   });
-  await addColumnIfMissing(queryInterface, 'users', 'role_id', {
-    type: DataTypes.UUID,
-    allowNull: true,
+
+  await runOnce(queryInterface, '002_users_add_password_reset_columns', async () => {
+    await addColumnIfMissing(queryInterface, 'users', 'reset_password_token', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+    await addColumnIfMissing(queryInterface, 'users', 'reset_password_expires_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
   });
-  await addColumnIfMissing(queryInterface, 'users', 'reset_password_token', {
-    type: DataTypes.STRING,
-    allowNull: true,
+
+  await runOnce(queryInterface, '003_users_add_2fa_columns', async () => {
+    await addColumnIfMissing(queryInterface, 'users', 'two_factor_otp_token', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+    await addColumnIfMissing(queryInterface, 'users', 'two_factor_otp_expires_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
   });
-  await addColumnIfMissing(queryInterface, 'users', 'reset_password_expires_at', {
-    type: DataTypes.DATE,
-    allowNull: true,
-  });
-  await addColumnIfMissing(queryInterface, 'users', 'two_factor_otp_token', {
-    type: DataTypes.STRING,
-    allowNull: true,
-  });
-  await addColumnIfMissing(queryInterface, 'users', 'two_factor_otp_expires_at', {
-    type: DataTypes.DATE,
-    allowNull: true,
-  });
-  await syncRolesTable(queryInterface);
-  await syncPermissionsTable(queryInterface);
-  await syncRoleModulesTable(queryInterface);
-  await seedDefaultPermissions();
-  await backfillRoleModulesFromPermissions();
-  await syncProductsTable(queryInterface);
-  await syncAddressesTable(queryInterface);
-  await syncOrdersTable(queryInterface);
+
+  await runOnce(queryInterface, '004_sync_roles_table', () => syncRolesTable(queryInterface));
+  await runOnce(queryInterface, '005_sync_permissions_table', () => syncPermissionsTable(queryInterface));
+  await runOnce(queryInterface, '006_sync_role_modules_table', () => syncRoleModulesTable(queryInterface));
+  await runOnce(queryInterface, '007_seed_default_permissions', () => seedDefaultPermissions());
+  await runOnce(queryInterface, '008_backfill_role_modules', () => backfillRoleModulesFromPermissions());
+  await runOnce(queryInterface, '009_sync_products_table', () => syncProductsTable(queryInterface));
+  await runOnce(queryInterface, '010_sync_addresses_table', () => syncAddressesTable(queryInterface));
+  await runOnce(queryInterface, '011_sync_orders_table', () => syncOrdersTable(queryInterface));
 }
