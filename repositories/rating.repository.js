@@ -50,6 +50,25 @@ export async function findRatingByUserAndProduct(userId, productId) {
   });
 }
 
+export async function findAllRatings() {
+  return Rating.findAll({
+    include: [
+      { model: User, as: 'user', attributes: userAttributes },
+      { model: Product, as: 'product', attributes: productAttributes },
+    ],
+    order: [['createdAt', 'DESC']],
+  });
+}
+
+export async function findRatingById(ratingId) {
+  return Rating.findByPk(ratingId, {
+    include: [
+      { model: User, as: 'user', attributes: userAttributes },
+      { model: Product, as: 'product', attributes: productAttributes },
+    ],
+  });
+}
+
 export async function createRating(data) {
   return Rating.create(data);
 }

@@ -58,13 +58,16 @@ export function orderResponse(orderModel) {
     return null;
   }
 
+  const address = addressResponse(order.address);
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
     userId: order.userId,
     user: orderUserResponse(order.user),
     addressId: order.addressId,
-    address: addressResponse(order.address),
+    address,
+    shippingAddress: address,
     status: order.status,
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,
@@ -78,7 +81,6 @@ export function orderResponse(orderModel) {
     discountAmount: toMoneyNumber(order.discountAmount),
     totalAmount: toMoneyNumber(order.totalAmount),
     items: (order.items ?? []).map(orderItemResponse),
-    user: order.user ?? {},
     placedAt: order.placedAt,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,

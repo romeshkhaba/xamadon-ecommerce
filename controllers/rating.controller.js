@@ -33,3 +33,21 @@ export async function deleteRating(req, res) {
 
   res.success(rating, "Rating deleted successfully");
 }
+
+export async function getAllRatings(req, res) {
+  const ratings = await ratingService.getAllRatings();
+
+  res.success(ratings, "Ratings retrieved successfully");
+}
+
+export async function adminUpdateRating(req, res) {
+  const rating = await ratingService.adminUpdateRating(req.params.ratingId, req.validatedData);
+
+  res.success(rating, "Rating updated successfully");
+}
+
+export async function adminDeleteRating(req, res) {
+  const rating = await ratingService.adminDeleteRating(req.params.ratingId);
+
+  res.success(rating, "Rating deleted successfully");
+}

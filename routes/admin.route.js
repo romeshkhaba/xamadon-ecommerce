@@ -5,6 +5,7 @@ import {
   updatePaymentStatusDTO,
 } from '../dto/order.dto.js';
 import { createPermissionDTO, updatePermissionDTO } from '../dto/permission.dto.js';
+import { updateRatingDTO } from '../dto/rating.dto.js';
 import { createProductDTO, updateProductDTO } from '../dto/product.dto.js';
 import { createRoleModuleDTO, updateRoleModuleDTO } from '../dto/role-module.dto.js';
 import { assignUserRoleDTO, createRoleDTO, updateRoleDTO } from '../dto/role.dto.js';
@@ -12,6 +13,7 @@ import { createAdminUserDTO, updateAdminUserDTO } from '../dto/user.dto.js';
 import * as orderController from '../controllers/order.controller.js';
 import * as permissionController from '../controllers/permission.controller.js';
 import * as productController from '../controllers/product.controller.js';
+import * as ratingController from '../controllers/rating.controller.js';
 import * as roleModuleController from '../controllers/role-module.controller.js';
 import * as roleController from '../controllers/role.controller.js';
 import * as userController from '../controllers/user.controller.js';
@@ -213,6 +215,23 @@ router.delete(
   '/products/:id',
   can('products', 'delete'),
   asyncHandler(productController.deleteProduct)
+);
+
+router.get(
+  '/ratings',
+  can('ratings', 'read'),
+  asyncHandler(ratingController.getAllRatings)
+);
+router.patch(
+  '/ratings/:ratingId',
+  can('ratings', 'write'),
+  validate(updateRatingDTO),
+  asyncHandler(ratingController.adminUpdateRating)
+);
+router.delete(
+  '/ratings/:ratingId',
+  can('ratings', 'delete'),
+  asyncHandler(ratingController.adminDeleteRating)
 );
 
 export default router;

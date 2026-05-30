@@ -83,3 +83,36 @@ export async function deleteRating(userId, ratingId) {
 
   return { id: ratingId };
 }
+
+export async function getAllRatings() {
+  const ratings = await ratingRepository.findAllRatings();
+
+  return ratings.map(ratingResponse);
+}
+
+export async function adminUpdateRating(ratingId, data) {
+  const rating = await ratingRepository.findRatingById(ratingId);
+
+  if (!rating) {
+    throw new AppError('Rating not found', 404);
+  }
+
+  const updatedRating = await ratingRepository.updateRating(rating, {
+    ...(data.score !== undefined ? { score: data.score } : {}),
+    ...(data.review !== undefined ? { review: normalizeReview(data.review) } : {}),
+  });
+
+  return ratingResponse(updatedRating);
+}
+
+export async function adminDeleteRating(ratingId) {
+  const rating = await ratingRepository.findRatingById(ratingId);
+
+  if (!rating) {
+    throw new AppError('Rating not found', 404);
+  }
+
+  await ratingRepository.deleteRating(rating);
+
+  return { id: ratingId };
+}
