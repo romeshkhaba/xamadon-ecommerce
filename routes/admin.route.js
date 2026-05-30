@@ -18,7 +18,7 @@ import * as roleModuleController from '../controllers/role-module.controller.js'
 import * as roleController from '../controllers/role.controller.js';
 import * as userController from '../controllers/user.controller.js';
 import authenticate from '../middleware/authenticate.js';
-import authorizeAdmin from '../middleware/authorize-admin.js';
+import authorizeDashboardAccess from '../middleware/authorize-admin.js';
 import authorizePermission from '../middleware/authorize-permission.js';
 import asyncHandler from '../middleware/async-handler.js';
 import uploadProductImage from '../middleware/upload-product-image.js';
@@ -36,7 +36,7 @@ router.post(
   asyncHandler(userController.createUserByAdmin)
 );
 
-router.use(authorizeAdmin);
+router.use(authorizeDashboardAccess);
 
 router.get('/me', asyncHandler(userController.getProfile));
 
