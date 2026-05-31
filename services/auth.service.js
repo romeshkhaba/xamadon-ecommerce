@@ -150,9 +150,11 @@ async function sendAdminLoginOtp(user) {
     throw new AppError('Unable to update OTP', 500);
   }
 
-  sendAdminLoginOtpEmail(updatedUser, otp, ADMIN_LOGIN_OTP_MINUTES).catch((error) => {
-    console.error('Failed to send admin login OTP email:', error.message);
-  });
+  try {
+    await sendAdminLoginOtpEmail(updatedUser, otp, ADMIN_LOGIN_OTP_MINUTES);
+  } catch (error) {
+    throw new AppError(`Unable to send OTP email: ${error.message}`, 500);
+  }
 }
 
 export async function resendAdminLoginOtp(data) {
